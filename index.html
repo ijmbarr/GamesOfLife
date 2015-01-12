@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Game Of Life</title>
+    <script src="grid.js"></script>
+    <script src="gol.js"></script>
+    <script src="jquery-1.11.2.min.js"></script>
+    <style type="text/css">
+      canvas { border: 1px solid black; }
+    </style>
+  </head>
+  
+  <body>
+    <div>
+      <canvas id="testC" width="600" height="600"></canvas>
+    </div>
+
+    <div>
+      <div>
+        GridSize: 
+        <select id="GridSize">
+          <option value="50" selected>50 by 50</option>
+          <option value="100">100 by 100 </option>
+          <option value="200">200 by 200 </option>
+        </select>
+      </div>
+
+      <div>
+        How to fill the inital grid:
+        <select id="Inital">
+          <option value="random" selected>Random</option>
+          <option value="empty">Empty</option>
+        </select>
+      </div>
+
+      <div>
+        Ruleset to use:
+        <select id="Ruleset">
+          <option value="gol" selected>Game of Life</option>
+          <option value="replicator">replicator</option>
+          <option value="seeds">seeds</option>
+          <option value="254">254</option>
+          <option value="34life">34life</option>
+          <option value="diamoeba">diamoeba</option>
+          <option value="2x2">2x2</option>
+          <option value="highlife">highlife</option>
+          <option value="day&night">day&night</option>
+          <option value="morley">morley</option>
+        </select>
+      </div>
+
+      <div>
+        Boundary Condition: 
+        <select id="Boundary">
+          <option value="periodic" selected>periodic</option>
+          <option value="dead">dead</option>
+        </select>
+      </div>
+
+      <div>
+        Add noise: 
+        <select id="Noise">
+          <option value="yes">Added Noise</option>
+          <option value="no"selected>No Added Noise</option>
+        </select>
+      </div>
+
+      <button type="button" onclick="start()">Initialise</button>
+
+    </div>
+
+    <div>
+      <button type="button" onclick="update()">Step</button>
+      <button type="button" onclick="run()">Run</button>
+      <button type="button" onclick="stop()">stop</button>
+    </div>
+
+  </body>
+
+
+
+</html>
+
+<script type="text/javascript">
+  //Intialise Grid
+  var canvasID = "testC";
+
+  //Getting Ready to do stuff
+  var looping = false;
+  var now, dt, last;
+
+  var gameTypes = {
+    "gol" : {b:[3], s:[2,3]},
+    "replicator" : {b:[1,3,5,7], s:[1,3,5,7]},
+    "seeds" : {b:[2], s:[]},
+    "254" : {b:[2,5], s:[4]},
+    "34life" :{b:[3,4], s:[3,4]},
+    "diamoeba" : {b:[3,5,6,7,8], s:[3,5,6,7,8]},
+    "2x2" : {b:[3,6], s:[1,2,5]},
+    "highlife": {b:[3,6], s:[2,3]},
+    "day&night" : {b:[3,6,7,8], s:[3,4,6,7,8]},
+    "morley" : {b:[3,6,8], s:[2,4,5]}
+  };
+
+  //Do Stuff
+  var getopts = function(){
+    opts = {
+      gridSize:document.getElementById("GridSize").value,
+      ruleSet: gameTypes[document.getElementById("Ruleset").value],
+      boundary:document.getElementById("Boundary").value,
+      noise:document.getElementById("Noise").value,
+      initial:document.getElementById("Inital").value
+    };
+
+    return opts;
+  }
+
+  var start = function(){
+    looping = false;
+    game = new GOL(canvasID, getopts());
+    game.start();
+  }
+
+  var update = function(){
+    game.next();
+  }
+
+  var run = function(){
+    looping = true;
+    last = timestamp();
+    game.next();
+    requestAnimationFrame(loopit);
+  }
+
+  var stop = function(){
+    looping= false;
+  }
+
+  var loopit = function(){
+    if(looping){
+      now = timestamp();
+      dt = now - last;
+      if(dt > 100){
+        game.next();
+        last = now;
+      }
+      requestAnimationFrame(loopit);
+    }
+  }
+
+  function timestamp() {
+    return window.performance && window.performance.now ? window.performance.now() : new Date().getTime();
+  }
+
+  var game = new GOL(canvasID, getopts());
+  game.start();
+  console.log("Here");
+
+</script>
