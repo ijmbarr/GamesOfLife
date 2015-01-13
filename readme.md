@@ -1,1 +1,1 @@
-A short implementation of the game of life in javascript. 
+A short implementation of Conway's game of life in javascript. 
