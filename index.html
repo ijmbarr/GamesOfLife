@@ -118,6 +118,8 @@
 
   var start = function(){
     looping = false;
+    game.removeMouseListeners();
+    delete game;
     game = new GOL(canvasID, getopts());
     game.start();
   }

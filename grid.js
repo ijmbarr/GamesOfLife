@@ -69,4 +69,9 @@ var grid = function(width, height, canvasID){
 	this.getY = function(y){
 		return  Math.floor(y/dy);
 	}
+
+	this.PrintIt = function(){
+		console.log("Down(" + dx + "," + dy + ")");
+
+	}
 }

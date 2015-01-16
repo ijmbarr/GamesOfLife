@@ -103,13 +103,10 @@ var GOL = function(canvasID, opts){
 	var mouseDown = false;
 	var cursorPos = {x:undefined, y:undefined};
 
-	canvas.addEventListener("mouseout", function(){ mouseDown = false; cursorPos = {x:undefined, y:undefined};}, false);
-	canvas.addEventListener("mousemove", function(e){tryToDraw(e);} ,false);
-	canvas.addEventListener("mousedown", function(e){mouseDown = true; tryToDraw(e);} ,false);
-	canvas.addEventListener("mouseup", function(){ mouseDown = false; cursorPos = {x:undefined, y:undefined}; }, false);
-
 	var tryToDraw = function(e){
 		if(mouseDown){
+			Grid.PrintIt();
+
 			var cx = Grid.getX(getCursorPosition(e)[0]);
 			var cy = Grid.getY(getCursorPosition(e)[1]);
 
@@ -123,10 +120,40 @@ var GOL = function(canvasID, opts){
 		}
 	}
 
+	function md(e){
+		mouseDown = true; 
+		tryToDraw(e);
+	}
+
+	function mm(e){
+		tryToDraw(e);
+	}
+
+	function mu(){
+		mouseDown = false; 
+		cursorPos = {x:undefined, y:undefined};
+	}
+
+	function addMouseListeners(){
+		canvas.addEventListener("mouseout", mu ,false);
+		canvas.addEventListener("mousemove", mm ,false);
+		canvas.addEventListener("mousedown", md ,false);
+		canvas.addEventListener("mouseup", mu, false);
+	}
+
+	this.removeMouseListeners = function(){
+		console.log("Here");
+		canvas.removeEventListener("mouseout", mu ,false);
+		canvas.removeEventListener("mousemove", mm ,false);
+		canvas.removeEventListener("mousedown", md ,false);
+		canvas.removeEventListener("mouseup", mu, false);
+	}
+
 	//Do Stuff
 
 	this.start = function(){
-		console.log("Start");
+		addMouseListeners();
+
 		if(opts["initial"] === "random"){
 			state = randomGrid();			
 		} else if (opts["initial"] === "empty"){
