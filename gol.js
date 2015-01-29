@@ -1,224 +1,185 @@
-var GOL = function(canvasID, opts){
-	console.log(opts);
+var GameOfLife = function(canvasID, opts){
 
-	var canvas = document.getElementById(canvasID);
-	
-	var state = [];
+    //Initialise things
+    this.canvasID = canvasID;
+    this.opts = opts;
+    this.state = [];
+    this.that = this;
 
-	//Grid Size
-	var width, height;
-	if(opts["gridSize"] === "50"){
-		width = 50;
-		height = 50;
-	}else if (opts["gridSize"] === "100"){
-		width = 100;
-		height = 100;
-	}else if(opts["gridSize"] === "200"){
-		width = 200;
-		height = 200;
-	}
+    //Grid
+    if(opts.gridSize === "50"){
+        this.width = 50;
+        this.height = 50;
+    }else if (opts.gridSize === "100"){
+        this.width = 100;
+        this.height = 100;
+    }else if(opts.gridSize === "200"){
+        this.width = 200;
+        this.height = 200;
+    }
 
-	//Grid Type
-	var Grid = new grid(width, height, canvasID);
+    this.Grid = new grid(this.width, this.height, this.canvasID);
 
-	//Boundary Conditions
-	var bc;
-	if(opts["boundary"] === "periodic"){
-		bc = function(current, x, y){
-			if(y < 0){
-				var tempY = height-1;
-			}else if(y >= height){
-				var tempY = 0;
-			}else{
-				var tempY = y;
-			}
-
-			if(x < 0){
-				var tempX = width-1;
-			}else if(x >= width){
-				var tempX = 0;
-			}else{
-				var tempX = x;
-			}
-			return current[tempY][tempX];
-		}
-	}else if(opts["boundary"] === "dead"){
-		bc = function(current, x, y){
-			if(y < 0){
-				return 0;
-			}else if(y >= height){
-				return 0;
-			}else{
-				var tempY = y;
-			}
-
-			if(x < 0){
-				return 0;
-			}else if(x >= width){
-				return 0;
-			}else{
-				var tempX = x;
-			}
-			return current[tempY][tempX];
-		}
-	}
-
-	//RuleSet
-	var applyRules;
-	applyRules = function(current, x, y){
-
-		count = 0;
-		for(xx = -1; xx < 2; xx++){
-			for(yy = -1; yy < 2; yy++){
-				if(!(xx==0&&yy==0)){
-					count += bc(current, xx + x, yy + y);
-				}
-			}
-		}
-
-		//Add Some Random
-		if(opts["noise"] === "yes"){
-			if (Math.random() >= (1.0 - 1.0/(width*height))){
-				return 1;
-			}
-		}
-
-		//Apply Rules
-		if(current[y][x] == 1){
-			if(opts["ruleSet"].s.indexOf(count) > -1){
-				return 1;
-			} else {
-				return 0;
-			}
-		} else {
-			if(opts["ruleSet"].b.indexOf(count) > -1){
-				return 1;
-			} else {
-				return 0;
-			}
-		}
-	}
-
-	//deal with mouse events
-	var mouseDown = false;
-	var cursorPos = {x:undefined, y:undefined};
-
-	var tryToDraw = function(e){
-		if(mouseDown){
-			Grid.PrintIt();
-
-			var cx = Grid.getX(getCursorPosition(e)[0]);
-			var cy = Grid.getY(getCursorPosition(e)[1]);
-
-			if (!(cursorPos.x == cx && cursorPos.y == cy)){
-				state[cy][cx] = (state[cy][cx] + 1)%2;
-				Grid.drawSingleSquare(cx, cy, state[cy][cx]);
-
-				cursorPos.x = cx;
-				cursorPos.y = cy;
-			}		
-		}
-	}
-
-	function md(e){
-		mouseDown = true; 
-		tryToDraw(e);
-	}
-
-	function mm(e){
-		tryToDraw(e);
-	}
-
-	function mu(){
-		mouseDown = false; 
-		cursorPos = {x:undefined, y:undefined};
-	}
-
-	function addMouseListeners(){
-		canvas.addEventListener("mouseout", mu ,false);
-		canvas.addEventListener("mousemove", mm ,false);
-		canvas.addEventListener("mousedown", md ,false);
-		canvas.addEventListener("mouseup", mu, false);
-	}
-
-	this.removeMouseListeners = function(){
-		console.log("Here");
-		canvas.removeEventListener("mouseout", mu ,false);
-		canvas.removeEventListener("mousemove", mm ,false);
-		canvas.removeEventListener("mousedown", md ,false);
-		canvas.removeEventListener("mouseup", mu, false);
-	}
-
-	//Do Stuff
-
-	this.start = function(){
-		addMouseListeners();
-
-		if(opts["initial"] === "random"){
-			state = randomGrid();			
-		} else if (opts["initial"] === "empty"){
-			state = emptyGrid();
-		}
-
-		Grid.draw(state);
-	}
-
-	this.next = function(){
-		newState = emptyGrid();
-		for(y = 0; y < height; y++){
-			for(x = 0; x < width; x++){
-				newState[y][x] = applyRules(state, x, y);
-			}
-		}
-
-		state = newState;
-		Grid.draw(state);
-	}
-
-	//Helper functions:
-	var randomGrid = function(){
-		toReturn = [];
-		for(y = 0; y < height; y++){
-			tempRow = []
-			for(x = 0; x < width; x++){
-				tempRow.push(Math.round(Math.random()));
-			}
-			toReturn.push(tempRow);
-		}
-		return toReturn;
-	}
-
-	var emptyGrid = function(){
-		toReturn = [];
-		for(y = 0; y < height; y++){
-			tempRow = []
-			for(x = 0; x < width; x++){
-				tempRow.push(0);
-			}
-			toReturn.push(tempRow);
-		}
-		return toReturn;
-	}
-
-	var getCursorPosition = function(e) {
-	    var x;
-	    var y;
-
-	    if (e.pageX || e.pageY) {
-			x = e.pageX;
-			y = e.pageY;
-	    }
-	    else {
-		x = e.clientX + document.body.scrollLeft +
-	            document.documentElement.scrollLeft;
-		y = e.clientY + document.body.scrollTop +
-	            document.documentElement.scrollTop;
-	    }
-	    // Convert to coordinates relative to the canvas
-	    var offset = $("#" + canvasID).offset();
-	    x -= offset.left;
-	    y -= offset.top;
-
-	    return [x,y];
-	}
+    //Deal with mouse events
+    this.mouseDown = false;
+    this.cursorPos = {x:undefined, y:undefined};
 }
+
+GameOfLife.prototype.bc = function(current, x, y){
+    if(this.opts.boundary === "periodic"){
+        if(y < 0){
+            var tempY = this.height-1;
+        }else if(y >= this.height){
+            var tempY = 0;
+        }else{
+            var tempY = y;
+        }
+
+        if(x < 0){
+            var tempX = this.width-1;
+        }else if(x >= this.width){
+            var tempX = 0;
+        }else{
+            var tempX = x;
+        }
+        return current[tempY][tempX];
+
+    }else if(this.opts.boundary === "dead"){
+        if(y < 0){
+            return 0;
+        }else if(y >= this.height){
+            return 0;
+        }else{
+            var tempY = y;
+        }
+
+        if(x < 0){
+            return 0;
+        }else if(x >= this.width){
+            return 0;
+        }else{
+            var tempX = x;
+        }
+        return current[tempY][tempX];
+    }
+}
+
+//Update state
+GameOfLife.prototype.applyRules = function(current, x, y){
+
+    var count = 0;
+    var xx, yy
+    for(xx = -1; xx < 2; xx++){
+        for(yy = -1; yy < 2; yy++){
+            if(!(xx==0&&yy==0)){
+                count += this.bc(current, xx + x, yy + y);
+            }
+        }
+    }
+
+    //Add Some Random
+    if(this.opts.noise === "yes"){
+        if (Math.random() >= (1.0 - 1.0/(this.width*this.height))){
+            return 1;
+        }
+    }
+
+    //Apply Rules
+    if(current[y][x] == 1){
+        if(this.opts.ruleSet.s.indexOf(count) > -1){
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        if(this.opts.ruleSet.b.indexOf(count) > -1){
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+}
+
+
+
+GameOfLife.prototype.tryToDraw = function(e, that){
+    if(that.mouseDown){
+        var offset = $("#" + that.canvasID).offset();
+        var cx = that.Grid.getX(e.pageX - offset.left);
+        var cy = that.Grid.getY(e.pageY - offset.top);
+
+        if (!(that.cursorPos.x == cx && that.cursorPos.y == cy)){
+            that.state[cy][cx] = (that.state[cy][cx] + 1)%2;
+            that.Grid.drawSingleSquare(cx, cy, that.state[cy][cx]);
+
+            that.cursorPos.x = cx;
+            that.cursorPos.y = cy;
+        }       
+    }
+}
+
+GameOfLife.prototype.addMouseListeners = function(that){
+    $("#" + that.canvasID).on("mouseout", function(e){that.mouseDown = false; that.cursorPos = {x:undefined, y:undefined}; });
+    $("#" + that.canvasID).on("mousemove", function(e){that.tryToDraw(e, that); });
+    $("#" + that.canvasID).on("mousedown", function(e){that.mouseDown = true; that.tryToDraw(e, that); });
+    $("#" + that.canvasID).on("mouseup", function(e){that.mouseDown = false; that.cursorPos = {x:undefined, y:undefined}; });
+}
+
+GameOfLife.prototype.removeMouseListeners = function(){
+    $("#" + this.canvasID).unbind("mouseout");
+    $("#" + this.canvasID).unbind("mousemove");
+    $("#" + this.canvasID).unbind("mousedown");
+    $("#" + this.canvasID).unbind("mouseup");
+}
+
+
+GameOfLife.prototype.start = function(){
+    var that = this;
+    this.addMouseListeners(that);
+
+    if(this.opts.initial === "random"){
+        this.state = this.randomGrid();           
+    } else if (this.opts.initial === "empty"){
+        this.state = this.emptyGrid();
+    }
+
+    this.Grid.draw(this.state);
+}
+
+GameOfLife.prototype.next = function(){
+    var newState = this.emptyGrid();
+    for(var y = 0; y < this.height; y++){
+        for(var x = 0; x < this.width; x++){
+            newState[y][x] = this.applyRules(this.state, x, y);
+        }
+    }
+
+    this.state = newState;
+    this.Grid.draw(this.state);
+}
+
+    //Helper functions:
+GameOfLife.prototype.randomGrid = function(){
+    var toReturn = [];
+    for(var y = 0; y < this.height; y++){
+        var tempRow = []
+        for(var x = 0; x < this.width; x++){
+            tempRow.push(Math.round(Math.random()));
+        }
+        toReturn.push(tempRow);
+    }
+    return toReturn;
+}
+
+GameOfLife.prototype.emptyGrid = function(){
+    var toReturn = [];
+    for(var y = 0; y < this.height; y++){
+        var tempRow = []
+        for(var x = 0; x < this.width; x++){
+            tempRow.push(0);
+        }
+        toReturn.push(tempRow);
+    }
+    return toReturn;
+}
+

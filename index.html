@@ -120,7 +120,7 @@
     looping = false;
     game.removeMouseListeners();
     delete game;
-    game = new GOL(canvasID, getopts());
+    game = new GameOfLife(canvasID, getopts());
     game.start();
   }
 
@@ -155,7 +155,7 @@
     return window.performance && window.performance.now ? window.performance.now() : new Date().getTime();
   }
 
-  var game = new GOL(canvasID, getopts());
+  var game = new GameOfLife(canvasID, getopts());
   game.start();
   console.log("Here");
 
